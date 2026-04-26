@@ -27,6 +27,7 @@
             display: block;
         }
 
+        /* Η ΣΤΑΜΠΑ ΠΑΝΩ ΣΤΟ ΡΟΜΠΟΤ */
         .overlay-name {
             position: absolute;
             bottom: 15px;
@@ -68,13 +69,17 @@
             synth.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'el-GR';
+            
+            // ΡΥΘΜΙΣΗ ΓΙΑ ΒΑΡΙΑ/ΑΝΔΡΙΚΗ ΦΩΝΗ
+            utterance.pitch = 0.5; 
+            utterance.rate = 0.9;  
+
             roboImg.src = "axilrobo_closed.png";
             utterance.onend = () => { roboImg.src = "axilrobo_open.png"; };
             synth.speak(utterance);
         }
 
         async function startApp() {
-            // Η ΑΛΛΑΓΗ ΠΟΥ ΖΗΤΗΣΕΣ
             speak("Αχιλλέα, σ' ακούω");
             status.innerText = "ΑΧΙΛΛΕΑ, Σ' ΑΚΟΥΩ...";
 
