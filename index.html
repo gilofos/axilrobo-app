@@ -5,49 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AXILROBO AI</title>
     <style>
-        body { background: #050505; color: #00d4ff; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        body { background: #050505; color: #00d4ff; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
         
-        /* Πλαίσιο για να μπει το κείμενο ΠΑΝΩ στην εικόνα */
-        .image-wrapper { position: relative; width: 250px; margin-bottom: 20px; }
+        /* Πλαίσιο που κρατάει την εικόνα και το κείμενο μαζί */
+        .img-container { position: relative; width: 250px; display: inline-block; }
         
-        #robo-img { width: 100%; border-radius: 25px; box-shadow: 0 0 20px #00d4ff; display: block; }
-        
-        /* 3D Γράμματα ΠΑΝΩ στην εικόνα (κάτω μέρος) */
-        .robo-name-3d { 
+        #robo-img { width: 100%; border-radius: 20px; box-shadow: 0 0 20px #00d4ff; display: block; }
+
+        /* ΤΟ 3D ΚΕΙΜΕΝΟ ΜΕΣΑ ΣΤΗΝ ΕΙΚΟΝΑ */
+        .robo-name-overlay {
             position: absolute;
-            bottom: 15px;
+            bottom: 15px; /* Το βάζει στο κάτω μέρος της εικόνας */
             left: 0;
             width: 100%;
             color: #00d4ff;
-            font-weight: 900;
             font-size: 1.8rem;
+            font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 3px;
+            letter-spacing: 2px;
             pointer-events: none;
-            /* Τεχνική για 3D εφέ */
+            /* ΕΦΕ 3D */
             text-shadow: 
-                0 1px 0 #008fb3,
-                0 2px 0 #007a99,
-                0 3px 0 #006680,
-                0 4px 0 #005266,
-                0 5px 10px rgba(0,0,0,0.8);
+                0 1px 0 #008fb3, 
+                0 2px 0 #007a99, 
+                0 3px 0 #006680, 
+                0 4px 0 #005266, 
+                0 6px 1px rgba(0,0,0,0.5), 
+                0 0 10px rgba(0,212,255,0.5);
         }
 
-        #status { font-size: 1.1rem; color: #fff; margin-bottom: 20px; background: rgba(0,212,255,0.1); padding: 15px; border-radius: 10px; width: 85%; min-height: 50px; border: 1px solid #00d4ff; }
-        .btn { background: #00d4ff; color: #000; border: none; padding: 20px 50px; font-size: 1.3rem; font-weight: bold; border-radius: 50px; cursor: pointer; margin: 10px; width: 80%; box-shadow: 0 5px 15px rgba(0,212,255,0.3); }
-        #map-btn { background: #ffcc00; display: none; color: #000; }
+        #status { font-size: 1rem; color: #fff; margin: 15px 0; background: rgba(0,212,255,0.1); padding: 12px; border-radius: 10px; width: 85%; border: 1px solid #00d4ff; min-height: 40px; }
+        .btn { background: #00d4ff; color: #000; border: none; padding: 18px 50px; font-size: 1.3rem; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,212,255,0.4); }
+        #map-btn { background: #ffcc00; display: none; margin-top: 10px; color: #000; }
     </style>
 </head>
 <body>
 
-    <div class="image-wrapper">
+    <div class="img-container">
         <img id="robo-img" src="axilrobo_open.png">
-        <div class="robo-name-3d">AXILROBO</div>
+        <div class="robo-name-overlay">AXILROBO</div>
     </div>
 
-    <div id="status">ΠΕΣ ΜΟΥ ΤΙ ΨΑΧΝΕΙΣ</div>
+    <div id="status">ΕΤΟΙΜΟΣ</div>
     <button class="btn" onclick="startApp()">ACTIVATE</button>
-    <button id="map-btn" class="btn" onclick="openMap()">ΔΕΣ ΤΟΝ ΧΑΡΤΗ / ΟΔΟ</button>
+    <button id="map-btn" class="btn" onclick="openMap()">ΔΕΣ ΤΟΝ ΧΑΡΤΗ</button>
 
     <script>
         const status = document.getElementById('status');
@@ -88,9 +89,7 @@
                         speak("Σου στέλνω πληροφορίες για " + currentQuery);
                         setTimeout(() => { openMap(); }, 2000);
                     }
-                } catch (e) {
-                    openMap();
-                }
+                } catch (e) { openMap(); }
             };
             recognition.start();
         }
