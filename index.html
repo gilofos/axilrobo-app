@@ -5,16 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AXILROBO AI</title>
     
-    <link rel="icon" type="image/png" href="axilrobo_open.png">
-    <link rel="apple-touch-icon" href="axilrobo_open.png">
+    <link rel="manifest" href="manifest.json">
+    
+    <link rel="icon" type="image/png" href="axilrobo_icon.png">
+    <link rel="apple-touch-icon" href="axilrobo_icon.png">
+    
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="AXILROBO">
+    <meta name="theme-color" content="#050505">
 
     <style>
         body { 
             background: #050505; 
             color: #00d4ff; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: sans-serif; 
             text-align: center; 
             margin: 0; 
             padding: 10px; 
@@ -23,15 +28,16 @@
             align-items: center; 
             justify-content: center; 
             min-height: 100vh; 
+            overflow: hidden; 
         }
         
-        /* Το πλαίσιο της εικόνας */
-        .img-box { 
+        .image-container { 
             position: relative; 
             width: 280px; 
             border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 0 25px #00d4ff;
+            margin-bottom: 10px;
         }
         
         #robo-img { 
@@ -39,10 +45,10 @@
             display: block; 
         }
 
-        /* ΤΑ 3D ΓΡΑΜΜΑΤΑ ΣΤΟ ΚΑΤΩ ΜΕΡΟΣ ΤΗΣ ΕΙΚΟΝΑΣ */
-        .robo-label {
+        /* ΤΑ 3D ΓΡΑΜΜΑΤΑ ΠΑΝΩ ΣΤΗΝ ΕΙΚΟΝΑ ΣΤΟ ΚΑΤΩ ΜΕΡΟΣ */
+        .robo-name-3d {
             position: absolute;
-            bottom: 10px;
+            bottom: 12px;
             left: 0;
             width: 100%;
             color: #00d4ff;
@@ -51,7 +57,6 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             pointer-events: none;
-            /* Εφέ 3D με σκιές */
             text-shadow: 
                 0 1px 0 #008fb3, 
                 0 2px 0 #007a99, 
@@ -63,57 +68,48 @@
         #status { 
             font-size: 1rem; 
             color: #fff; 
-            margin: 20px 0; 
+            margin: 15px 0; 
             background: rgba(0,212,255,0.1); 
-            padding: 15px; 
-            border-radius: 12px; 
+            padding: 12px; 
+            border-radius: 10px; 
             width: 85%; 
             border: 1px solid #00d4ff; 
-            min-height: 50px; 
+            min-height: 45px; 
         }
 
         .btn { 
             background: #00d4ff; 
             color: #000; 
             border: none; 
-            padding: 20px 60px; 
-            font-size: 1.5rem; 
+            padding: 18px 50px; 
+            font-size: 1.4rem; 
             font-weight: bold; 
             border-radius: 50px; 
             cursor: pointer; 
-            box-shadow: 0 5px 20px rgba(0,212,255,0.5);
+            box-shadow: 0 5px 15px rgba(0,212,255,0.4);
+            transition: 0.2s;
         }
 
-        #map-btn { 
-            background: #ffcc00; 
-            display: none; 
-            margin-top: 15px; 
-            color: #000; 
-            padding: 12px 30px;
-            font-size: 1.1rem;
-        }
+        .btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
 
-    <div class="img-box">
+    <div class="image-container">
         <img id="robo-img" src="axilrobo_open.png">
-        <div class="robo-label">AXILROBO</div>
+        <div class="robo-name-3d">AXILROBO</div>
     </div>
 
-    <div id="status">ΕΤΟΙΜΟΣ ΑΧΙΛΛΕΑ</div>
+    <div id="status">ΕΤΟΙΜΟΣ</div>
     
     <button class="btn" onclick="startApp()">ACTIVATE</button>
-    <button id="map-btn" class="btn" onclick="openMap()">ΠΕΡΙΣΣΟΤΕΡΑ</button>
 
     <script>
         const status = document.getElementById('status');
         const roboImg = document.getElementById('robo-img');
-        const mapBtn = document.getElementById('map-btn');
         const synth = window.speechSynthesis;
-        let currentQuery = "";
 
-        function speak(text, callback) {
+        function speak(text) {
             synth.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'el-GR';
@@ -122,40 +118,34 @@
             roboImg.src = "axilrobo_closed.png";
             utterance.onend = () => { 
                 roboImg.src = "axilrobo_open.png"; 
-                if(callback) callback();
             };
             synth.speak(utterance);
         }
 
         async function startApp() {
-            speak("Σε ακούω");
+            speak("Ακούω Αχιλλέα");
+            
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Το κινητό δεν υποστηρίζει αναγνώριση φωνής.");
+                return;
+            }
+
             const recognition = new SpeechRecognition();
             recognition.lang = 'el-GR';
 
-            recognition.onresult = async (event) => {
-                currentQuery = event.results[0][0].transcript;
-                status.innerText = "Ψάχνω: " + currentQuery;
-
-                try {
-                    const response = await fetch(`https://el.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(currentQuery)}`);
-                    const data = await response.json();
-                    
-                    if (data.extract) {
-                        status.innerText = data.extract;
-                        speak(data.extract);
-                        mapBtn.style.display = "block";
-                    } else {
-                        speak("Αχιλλέα, δες τι βρήκα για " + currentQuery);
-                        setTimeout(() => { openMap(); }, 2000);
-                    }
-                } catch (e) { openMap(); }
+            recognition.onresult = (event) => {
+                const query = event.results[0][0].transcript;
+                status.innerText = "Ψάχνω: " + query;
+                speak("Ψάχνω για " + query);
+                
+                // Άνοιγμα αναζήτησης μετά από 2 δευτερόλεπτα
+                setTimeout(() => {
+                    window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
+                }, 2000);
             };
+            
             recognition.start();
-        }
-
-        function openMap() {
-            window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(currentQuery);
         }
     </script>
 </body>
