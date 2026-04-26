@@ -69,7 +69,7 @@
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'el-GR';
             
-            // ΕΠΑΝΑΦΟΡΑ ΣΤΙΣ ΚΑΝΟΝΙΚΕΣ ΡΥΘΜΙΣΕΙΣ
+            // ΚΑΝΟΝΙΚΗ ΓΥΝΑΙΚΕΙΑ ΦΩΝΗ
             utterance.pitch = 1.0; 
             utterance.rate = 1.0;  
 
@@ -79,8 +79,9 @@
         }
 
         async function startApp() {
-            speak("Σ' ακούω, Αχιλλέα");
-            status.innerText = "Σ' ΑΚΟΥΩ, ΑΧΙΛΛΕΑ...";
+            // Η ΝΕΑ ΦΡΑΣΗ ΠΟΥ ΖΗΤΗΣΕΣ
+            speak("Αχιλλέα, ορίστε, τι θέλεις;");
+            status.innerText = "ΑΧΙΛΛΕΑ ΟΡΙΣΤΕ ΤΙ ΘΕΛΕΙΣ;";
 
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
