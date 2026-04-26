@@ -69,10 +69,10 @@
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'el-GR';
             
-            // --- ΤΕΡΜΑ ΜΠΑΣΑ ΦΩΝΗ ---
-            utterance.pitch = 0.3; // Πολύ βαρύς τόνος
-            utterance.rate = 0.8;  // Πιο αργή ομιλία για "όγκο"
-            // -------------------------
+            // --- ΜΕΓΙΣΤΗ ΠΑΡΑΜΟΡΦΩΣΗ ΓΙΑ ΑΝΔΡΙΚΟ ΕΦΕ ---
+            utterance.pitch = 0.1; // Το πιο χαμηλό/μπάσο δυνατό
+            utterance.rate = 0.7;  // Αρκετά πιο αργά για να ακούγεται επιβλητικό
+            // -----------------------------------------
 
             roboImg.src = "axilrobo_closed.png";
             utterance.onend = () => { roboImg.src = "axilrobo_open.png"; };
@@ -80,6 +80,7 @@
         }
 
         async function startApp() {
+            // Διορθωμένο κείμενο
             speak("Σ' ακούω, Αχιλλέα");
             status.innerText = "Σ' ΑΚΟΥΩ, ΑΧΙΛΛΕΑ...";
 
@@ -94,13 +95,14 @@
                 try {
                     const response = await fetch(`https://el.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(currentQuery)}`);
                     const data = await response.json();
-                    mapBtn.style.display = "block";
-
+                    
                     if (data.extract) {
                         status.innerText = data.extract;
                         speak(data.extract);
+                        mapBtn.style.display = "block";
                     } else {
                         speak("Αχιλλέα, σου βρήκα τη διεύθυνση. Πάτα το κίτρινο κουμπί.");
+                        mapBtn.style.display = "block";
                     }
                 } catch (e) {
                     mapBtn.style.display = "block";
