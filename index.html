@@ -27,7 +27,6 @@
             display: block;
         }
 
-        /* Η ΣΤΑΜΠΑ ΠΑΝΩ ΣΤΟ ΡΟΜΠΟΤ */
         .overlay-name {
             position: absolute;
             bottom: 15px;
@@ -75,9 +74,9 @@
         }
 
         async function startApp() {
-            // ΤΩΡΑ ΤΟ ΛΕΕΙ ΚΑΙ ΤΟ ΓΡΑΦΕΙ
-            speak("Ακούω Αχιλλέα");
-            status.innerText = "ΑΚΟΥΩ ΑΧΙΛΛΕΑ...";
+            // Η ΑΛΛΑΓΗ ΠΟΥ ΖΗΤΗΣΕΣ
+            speak("Αχιλλέα, σ' ακούω");
+            status.innerText = "ΑΧΙΛΛΕΑ, Σ' ΑΚΟΥΩ...";
 
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
