@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AXILROBO AI</title>
+    <title>AXILROBO SPEAKER</title>
     <style>
         body { background: #000; color: #00d4ff; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-        #robo-img { width: 250px; border-radius: 20px; box-shadow: 0 0 20px #00d4ff; margin-bottom: 20px; }
-        #status { font-size: 1.2rem; color: #fff; margin-bottom: 20px; min-height: 50px; padding: 0 10px; }
-        .btn { background: #00d4ff; color: #000; border: none; padding: 20px 50px; font-size: 1.5rem; font-weight: bold; border-radius: 50px; cursor: pointer; }
+        #robo-img { width: 220px; border-radius: 20px; box-shadow: 0 0 25px #00d4ff; margin-bottom: 20px; }
+        #status { font-size: 1.1rem; color: #fff; margin-bottom: 20px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; width: 90%; max-height: 200px; overflow-y: auto; }
+        .btn { background: #00d4ff; color: #000; border: none; padding: 20px 50px; font-size: 1.5rem; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 0 15px #00d4ff; }
     </style>
 </head>
 <body>
 
+    <h1>AXILROBO</h1>
     <img id="robo-img" src="axilrobo_open.png">
-    <div id="status">ΠΑΤΑ ΕΚΚΙΝΗΣΗ</div>
+    <div id="status">ΠΕΣ ΜΙΑ ΛΕΞΗ (π.χ. Παρθενώνας)</div>
     <button class="btn" onclick="startApp()">ACTIVATE</button>
 
     <script>
@@ -23,16 +24,20 @@
         const synth = window.speechSynthesis;
 
         function speak(text) {
+            synth.cancel(); // Σταματάει ό,τι έλεγε πριν για να ξεκινήσει το νέο
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'el-GR';
-            utterance.rate = 1.0;
+            utterance.rate = 0.9;
+            
             roboImg.src = "axilrobo_closed.png";
             utterance.onend = () => { roboImg.src = "axilrobo_open.png"; };
+            
             synth.speak(utterance);
         }
 
         async function startApp() {
-            speak("Σε ακούω Αχιλλέα");
+            // Πρώτη ομιλία για να "ανοίξει" το ηχείο στο κινητό
+            speak("Σε ακούω");
             
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
@@ -40,27 +45,24 @@
 
             recognition.onresult = async (event) => {
                 const query = event.results[0][0].transcript;
-                status.innerText = "Σκέφτομαι για: " + query;
+                status.innerText = "Αναζήτηση: " + query;
 
-                // Χρησιμοποιούμε μια ελεύθερη πηγή για να πάρουμε ΚΕΙΜΕΝΟ που μπορεί να διαβαστεί
                 try {
-                    const res = await fetch(`https://el.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
-                    const data = await res.json();
+                    // Παίρνουμε το κείμενο από την Wikipedia για να μπορεί να το ΕΚΦΩΝΗΣΕΙ
+                    const response = await fetch(`https://el.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
+                    const data = await response.json();
                     
                     if (data.extract) {
-                        // ΕΔΩ ΜΙΛΑΕΙ ΚΑΙ ΔΙΑΒΑΖΕΙ ΤΗΝ ΑΠΑΝΤΗΣΗ
-                        status.innerText = data.extract;
-                        speak(data.extract);
+                        status.innerText = data.extract; // Το γράφει στην οθόνη
+                        speak(data.extract); // ΤΟ ΔΙΑΒΑΖΕΙ ΔΥΝΑΤΑ
                     } else {
-                        // Αν δεν βρει κείμενο, του δίνουμε μια έτοιμη φωνητική απάντηση
-                        const failMsg = "Αχιλλέα, δεν βρήκα έτοιμη απάντηση για να σου διαβάσω, αλλά σου ανοίγω τη Google.";
-                        speak(failMsg);
+                        speak("Αχιλλέα, δεν βρήκα πληροφορίες για " + query + ". Ψάξε στη Google.");
                         setTimeout(() => {
                             window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
-                        }, 4000);
+                        }, 3000);
                     }
                 } catch (e) {
-                    speak("Υπήρξε ένα σφάλμα, Αχιλλέα.");
+                    speak("Κάτι πήγε στραβά, δοκίμασε πάλι.");
                 }
             };
             recognition.start();
