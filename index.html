@@ -5,36 +5,106 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AXILROBO AI</title>
     
-    <link rel="icon" type="image/png" href="https://gilofos.github.io/axilrobo/axilrobo_open.png?v=2">
-    <link rel="apple-touch-icon" href="https://gilofos.github.io/axilrobo/axilrobo_open.png?v=2">
-    
+    <link rel="icon" type="image/png" href="axilrobo_open.png">
+    <link rel="apple-touch-icon" href="axilrobo_open.png">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="AXILROBO">
 
     <style>
-        body { background: #050505; color: #00d4ff; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
-        .image-container { position: relative; width: 280px; margin-bottom: 10px; }
-        #robo-img { width: 100%; border-radius: 20px; box-shadow: 0 0 20px #00d4ff; display: block; }
-        .robo-name-3d {
-            position: absolute; bottom: 15px; left: 0; width: 100%; color: #00d4ff; font-size: 2.2rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; pointer-events: none;
-            text-shadow: 0 1px 0 #008fb3, 0 2px 0 #007a99, 0 3px 0 #006680, 0 4px 0 #005266, 0 6px 4px rgba(0,0,0,0.8), 0 0 10px rgba(0,212,255,0.5);
+        body { 
+            background: #050505; 
+            color: #00d4ff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-align: center; 
+            margin: 0; 
+            padding: 10px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
         }
-        #status { font-size: 1rem; color: #fff; margin: 15px 0; background: rgba(0,212,255,0.1); padding: 12px; border-radius: 10px; width: 85%; border: 1px solid #00d4ff; min-height: 45px; }
-        .btn { background: #00d4ff; color: #000; border: none; padding: 18px 50px; font-size: 1.4rem; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,212,255,0.4); transition: 0.2s; }
-        #map-btn { background: #ffcc00; display: none; margin-top: 10px; color: #000; font-size: 1.1rem; }
+        
+        /* Το πλαίσιο της εικόνας */
+        .img-box { 
+            position: relative; 
+            width: 280px; 
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 25px #00d4ff;
+        }
+        
+        #robo-img { 
+            width: 100%; 
+            display: block; 
+        }
+
+        /* ΤΑ 3D ΓΡΑΜΜΑΤΑ ΣΤΟ ΚΑΤΩ ΜΕΡΟΣ ΤΗΣ ΕΙΚΟΝΑΣ */
+        .robo-label {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            color: #00d4ff;
+            font-size: 2.2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            pointer-events: none;
+            /* Εφέ 3D με σκιές */
+            text-shadow: 
+                0 1px 0 #008fb3, 
+                0 2px 0 #007a99, 
+                0 3px 0 #006680, 
+                0 4px 0 #005266, 
+                0 6px 4px rgba(0,0,0,0.8);
+        }
+
+        #status { 
+            font-size: 1rem; 
+            color: #fff; 
+            margin: 20px 0; 
+            background: rgba(0,212,255,0.1); 
+            padding: 15px; 
+            border-radius: 12px; 
+            width: 85%; 
+            border: 1px solid #00d4ff; 
+            min-height: 50px; 
+        }
+
+        .btn { 
+            background: #00d4ff; 
+            color: #000; 
+            border: none; 
+            padding: 20px 60px; 
+            font-size: 1.5rem; 
+            font-weight: bold; 
+            border-radius: 50px; 
+            cursor: pointer; 
+            box-shadow: 0 5px 20px rgba(0,212,255,0.5);
+        }
+
+        #map-btn { 
+            background: #ffcc00; 
+            display: none; 
+            margin-top: 15px; 
+            color: #000; 
+            padding: 12px 30px;
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 <body>
 
-    <div class="image-container">
+    <div class="img-box">
         <img id="robo-img" src="axilrobo_open.png">
-        <div class="robo-name-3d">AXILROBO</div>
+        <div class="robo-label">AXILROBO</div>
     </div>
 
-    <div id="status">ΕΤΟΙΜΟΣ</div>
+    <div id="status">ΕΤΟΙΜΟΣ ΑΧΙΛΛΕΑ</div>
+    
     <button class="btn" onclick="startApp()">ACTIVATE</button>
-    <button id="map-btn" class="btn" onclick="openMap()">ΔΕΣ ΤΟΝ ΧΑΡΤΗ</button>
+    <button id="map-btn" class="btn" onclick="openMap()">ΠΕΡΙΣΣΟΤΕΡΑ</button>
 
     <script>
         const status = document.getElementById('status');
@@ -47,36 +117,46 @@
             synth.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'el-GR';
-            utterance.rate = 1.0;
+            
+            // Κίνηση στόματος
             roboImg.src = "axilrobo_closed.png";
-            utterance.onend = () => { roboImg.src = "axilrobo_open.png"; if(callback) callback(); };
+            utterance.onend = () => { 
+                roboImg.src = "axilrobo_open.png"; 
+                if(callback) callback();
+            };
             synth.speak(utterance);
         }
 
         async function startApp() {
-            speak("Ακούω");
+            speak("Σε ακούω");
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
             recognition.lang = 'el-GR';
+
             recognition.onresult = async (event) => {
                 currentQuery = event.results[0][0].transcript;
-                status.innerText = "Αναζήτηση: " + currentQuery;
+                status.innerText = "Ψάχνω: " + currentQuery;
+
                 try {
                     const response = await fetch(`https://el.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(currentQuery)}`);
                     const data = await response.json();
+                    
                     if (data.extract) {
                         status.innerText = data.extract;
                         speak(data.extract);
                         mapBtn.style.display = "block";
                     } else {
-                        speak("Σου στέλνω πληροφορίες για " + currentQuery, () => { setTimeout(() => { openMap(); }, 500); });
+                        speak("Αχιλλέα, δες τι βρήκα για " + currentQuery);
+                        setTimeout(() => { openMap(); }, 2000);
                     }
                 } catch (e) { openMap(); }
             };
             recognition.start();
         }
 
-        function openMap() { window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(currentQuery); }
+        function openMap() {
+            window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(currentQuery);
+        }
     </script>
 </body>
 </html>
