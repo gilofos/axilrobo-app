@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXILROBO Mobile</title>
+    <style>
+        body { 
+            background-color: #050505; 
+            color: #00d4ff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-align: center; 
+            margin: 0;
+            padding: 20px;
+        }
+        h1 { 
+            font-size: 2.5rem; 
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px #00d4ff;
+        }
+        #robo-img { 
+            width: 100%; 
+            max-width: 380px; 
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+            margin: 20px 0;
+        }
+        #status-box {
+            background: #111;
+            border: 1px solid #222;
+            padding: 15px;
+            border-radius: 10px;
+            min-height: 60px;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+        .btn {
+            background: #00d4ff;
+            color: #000;
+            border: none;
+            padding: 20px 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+        }
+        .btn:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+
+    <h1>AXILROBO</h1>
+
+    <img id="robo-img" src="axilrobo_open.png" alt="AXILROBO">
+
+    <div id="status-box" id="status">
+        <span id="display-text">ΕΤΟΙΜΟΣ ΓΙΑ ΔΡΑΣΗ</span>
+    </div>
+
+    <button class="btn" onclick="startListening()">ACTIVATE</button>
+
+    <script>
+        const displayText = document.getElementById('display-text');
+        const roboImg = document.getElementById('robo-img');
+
+        function startListening() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'el-GR';
+
+            recognition.onstart = () => {
+                displayText.innerText = "ΣΕ ΑΚΟΥΩ, ΑΧΙΛΛΕΑ...";
+                displayText.style.color = "#ffff00";
+            };
+
+            recognition.onresult = (event) => {
+                const speechToText = event.results[0][0].transcript;
+                displayText.innerText = "ΕΣΥ: " + speechToText;
+                displayText.style.color = "#ffffff";
+                
+                // Άνοιγμα Google Search σε νέο tab
+                setTimeout(() => {
+                    window.open("https://www.google.com/search?q=" + encodeURIComponent(speechToText), "_blank");
+                }, 1000);
+
+                speak("Αχιλλέα, ψάχνω για " + speechToText);
+            };
+
+            recognition.onerror = () => {
+                displayText.innerText = "ΔΕΝ ΣΕ ΑΚΟΥΣΑ...";
+                displayText.style.color = "#ff4444";
+            };
+
+            recognition.start();
+        }
+
+        function speak(text) {
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'el-GR';
+            
+            // Blink Effect
+            roboImg.src = "axilrobo_closed.png";
+            window.speechSynthesis.speak(msg);
+            
+            msg.onend = () => {
+                roboImg.src = "axilrobo_open.png";
+            };
+        }
+    </script>
+</body>
+</html>
