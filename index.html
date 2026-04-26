@@ -54,24 +54,23 @@
                 const query = event.results[0][0].transcript;
                 status.innerText = "Αναζήτηση: " + query;
 
-                // ΠΡΩΤΑ προσπαθεί να βρει κείμενο για να το ΔΙΑΒΑΣΕΙ
+                // Προσπάθεια να βρει κείμενο για να το ΔΙΑΒΑΣΕΙ από Wikipedia
                 try {
                     const response = await fetch(`https://el.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
                     const data = await response.json();
                     
-                    let speechText = "Αχιλλέα, σου φέρνω τις πληροφορίες για " + query + ". ";
+                    let infoToSpeak = "Αχιλλέα, σου φέρνω πληροφορίες για " + query + ". ";
                     if (data.extract) {
-                        speechText += data.extract; // Προσθέτει το κείμενο της Wikipedia στην ομιλία
+                        infoToSpeak += data.extract;
                     }
 
-                    speak(speechText, () => {
-                        // ΜΟΛΙΣ ΤΕΛΕΙΩΣΕΙ Η ΟΜΙΛΙΑ (ή ταυτόχρονα), ανοίγει το παράθυρο που είχες
-                        container.style.display = "block";
-                        frame.src = "https://www.bing.com/search?q=" + encodeURIComponent(query);
-                    });
+                    // Μιλάει και ταυτόχρονα ανοίγει το Bing από κάτω όπως στη φωτό
+                    speak(infoToSpeak);
+                    container.style.display = "block";
+                    frame.src = "https://www.bing.com/search?q=" + encodeURIComponent(query);
 
                 } catch (e) {
-                    speak("Σου ανοίγω τα αποτελέσματα Αχιλλέα.");
+                    speak("Ανοίγω τα αποτελέσματα Αχιλλέα.");
                     container.style.display = "block";
                     frame.src = "https://www.bing.com/search?q=" + encodeURIComponent(query);
                 }
