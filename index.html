@@ -5,44 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AXILROBO AI</title>
     <style>
-        body { background: #050505; color: #00d4ff; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        #robo-img { width: 150px; border-radius: 20px; box-shadow: 0 0 15px #00d4ff; margin: 10px auto; }
-        #status { font-size: 1rem; color: #fff; margin-bottom: 10px; min-height: 20px; }
-        .btn { background: #00d4ff; color: #000; border: none; padding: 15px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer; margin-bottom: 10px; }
-        #results-container { width: 100%; flex-grow: 1; border: 2px solid #00d4ff; border-radius: 15px; overflow: hidden; background: white; display: none; }
-        iframe { width: 100%; height: 100%; border: none; }
+        body { background: #050505; color: #00d4ff; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        #robo-img { width: 220px; border-radius: 20px; box-shadow: 0 0 20px #00d4ff; margin-bottom: 20px; }
+        #status { font-size: 1.2rem; color: #fff; margin-bottom: 20px; background: rgba(0,212,255,0.1); padding: 20px; border-radius: 15px; width: 85%; }
+        .btn { background: #00d4ff; color: #000; border: none; padding: 20px 60px; font-size: 1.5rem; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,212,255,0.4); }
     </style>
 </head>
 <body>
 
     <img id="robo-img" src="axilrobo_open.png">
-    <div id="status">ΕΤΟΙΜΟΣ</div>
-    <button id="main-btn" class="btn" onclick="startApp()">ACTIVATE</button>
-
-    <div id="results-container">
-        <iframe id="results-frame" src=""></iframe>
-    </div>
+    <div id="status">ΕΤΟΙΜΟΣ ΓΙΑ ΕΝΤΟΛΗ</div>
+    <button class="btn" onclick="startApp()">ACTIVATE</button>
 
     <script>
         const status = document.getElementById('status');
         const roboImg = document.getElementById('robo-img');
-        const frame = document.getElementById('results-frame');
-        const container = document.getElementById('results-container');
         const synth = window.speechSynthesis;
 
-        function speak(text) {
+        function speak(text, callback) {
             synth.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'el-GR';
             utterance.rate = 1.0;
             roboImg.src = "axilrobo_closed.png";
-            utterance.onend = () => { roboImg.src = "axilrobo_open.png"; };
+            utterance.onend = () => { 
+                roboImg.src = "axilrobo_open.png"; 
+                if(callback) callback();
+            };
             synth.speak(utterance);
         }
 
         async function startApp() {
             speak("Ακούω");
-            
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
             recognition.lang = 'el-GR';
@@ -51,23 +45,23 @@
                 const query = event.results[0][0].transcript;
                 status.innerText = "Αναζήτηση: " + query;
 
-                // ΔΙΑΒΑΖΕΙ ΤΗΝ ΠΕΡΙΛΗΨΗ
                 try {
                     const response = await fetch(`https://el.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
                     const data = await response.json();
                     
-                    container.style.display = "block";
-                    // ΧΡΗΣΙΜΟΠΟΙΟΥΜΕ DuckDuckGo ΠΟΥ ΔΕΝ ΕΧΕΙ COOKIES ΠΑΡΑΘΥΡΑ
-                    frame.src = "https://duckduckgo.com/?q=" + encodeURIComponent(query);
+                    let resultText = data.extract ? data.extract : "Σου φέρνω τις πληροφορίες για " + query;
+                    
+                    // Του λέμε να ΜΙΛΗΣΕΙ και ΜΟΛΙΣ ΤΕΛΕΙΩΣΕΙ να ανοίξει τη Google
+                    speak(resultText, () => {
+                        setTimeout(() => {
+                            window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
+                        }, 500);
+                    });
 
-                    if (data.extract) {
-                        speak(data.extract);
-                    } else {
-                        speak("Σου φέρνω τα αποτελέσματα Αχιλλέα");
-                    }
                 } catch (e) {
-                    container.style.display = "block";
-                    frame.src = "https://duckduckgo.com/?q=" + encodeURIComponent(query);
+                    speak("Ανοίγω τη Google", () => {
+                        window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
+                    });
                 }
             };
             recognition.start();
