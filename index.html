@@ -8,55 +8,78 @@
         body { 
             background-color: #050505; 
             color: #00d4ff; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
             text-align: center; 
             margin: 0;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
         }
         h1 { 
-            font-size: 2.5rem; 
-            letter-spacing: 3px;
-            margin-bottom: 10px;
-            text-shadow: 0 0 15px #00d4ff;
+            font-size: 2.8rem; 
+            letter-spacing: 4px;
+            margin: 0 0 10px 0;
+            text-shadow: 0 0 20px #00d4ff;
+            font-weight: 900;
+        }
+        #robo-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
         }
         #robo-img { 
             width: 100%; 
-            max-width: 380px; 
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
-            margin: 20px 0;
+            border-radius: 30px;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+            transition: transform 0.2s;
         }
         #status-box {
-            background: #111;
-            border: 1px solid #222;
-            padding: 15px;
-            border-radius: 10px;
-            min-height: 60px;
-            margin-bottom: 25px;
-            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #111;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 350px;
+            margin: 20px 0;
+            min-height: 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .btn {
-            background: #00d4ff;
+            background: linear-gradient(145deg, #00d4ff, #008fb3);
             color: #000;
             border: none;
-            padding: 20px 50px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            border-radius: 50px;
+            padding: 22px 60px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            border-radius: 100px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+            box-shadow: 0 10px 20px rgba(0, 212, 255, 0.4);
+            text-transform: uppercase;
+            transition: all 0.3s;
         }
-        .btn:active { transform: scale(0.95); }
+        .btn:active {
+            transform: scale(0.9);
+            box-shadow: 0 5px 10px rgba(0, 212, 255, 0.2);
+        }
     </style>
 </head>
 <body>
 
     <h1>AXILROBO</h1>
 
-    <img id="robo-img" src="axilrobo_open.png" alt="AXILROBO">
+    <div id="robo-container">
+        <img id="robo-img" src="axilrobo_open.png" alt="AXILROBO">
+    </div>
 
-    <div id="status-box" id="status">
-        <span id="display-text">ΕΤΟΙΜΟΣ ΓΙΑ ΔΡΑΣΗ</span>
+    <div id="status-box">
+        <span id="display-text">ΠΑΤΑ ΓΙΑ ΕΚΚΙΝΗΣΗ</span>
     </div>
 
     <button class="btn" onclick="startListening()">ACTIVATE</button>
@@ -64,48 +87,68 @@
     <script>
         const displayText = document.getElementById('display-text');
         const roboImg = document.getElementById('robo-img');
+        let synth = window.speechSynthesis;
 
         function startListening() {
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            // 1. Ξεκλειδώνουμε τον ήχο αμέσως (απαραίτητο για κινητά)
+            const unlockInput = new SpeechSynthesisUtterance('');
+            synth.speak(unlockInput);
+
+            // 2. Έλεγχος αν υποστηρίζεται η αναγνώριση φωνής
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Ο browser δεν υποστηρίζει φωνητική αναγνώριση. Χρησιμοποίησε Chrome ή Safari.");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
             recognition.lang = 'el-GR';
+            recognition.interimResults = false;
 
             recognition.onstart = () => {
                 displayText.innerText = "ΣΕ ΑΚΟΥΩ, ΑΧΙΛΛΕΑ...";
                 displayText.style.color = "#ffff00";
+                roboImg.style.transform = "scale(1.05)";
+            };
+
+            recognition.onerror = (event) => {
+                displayText.innerText = "ΚΑΤΙ ΠΗΓΕ ΣΤΡΑΒΑ...";
+                displayText.style.color = "#ff4444";
+                roboImg.style.transform = "scale(1)";
             };
 
             recognition.onresult = (event) => {
-                const speechToText = event.results[0][0].transcript;
-                displayText.innerText = "ΕΣΥ: " + speechToText;
+                const resultText = event.results[0][0].transcript;
+                displayText.innerText = "ΕΙΠΕΣ: " + resultText;
                 displayText.style.color = "#ffffff";
                 
-                // Άνοιγμα Google Search σε νέο tab
-                setTimeout(() => {
-                    window.open("https://www.google.com/search?q=" + encodeURIComponent(speechToText), "_blank");
-                }, 1000);
-
-                speak("Αχιλλέα, ψάχνω για " + speechToText);
-            };
-
-            recognition.onerror = () => {
-                displayText.innerText = "ΔΕΝ ΣΕ ΑΚΟΥΣΑ...";
-                displayText.style.color = "#ff4444";
+                // Φωνητική απάντηση και ΜΕΤΑ μετάβαση στη Google
+                speak("Αχιλλέα, ψάχνω για " + resultText, () => {
+                    setTimeout(() => {
+                        window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(resultText);
+                    }, 800);
+                });
             };
 
             recognition.start();
         }
 
-        function speak(text) {
-            const msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'el-GR';
-            
-            // Blink Effect
+        function speak(text, callback) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'el-GR';
+            utterance.pitch = 1;
+            utterance.rate = 0.9; // Λίγο πιο αργά για να ακούγεται καθαρά
+
+            // Blink effect: Κλείνει τα μάτια όταν ξεκινάει να μιλάει
             roboImg.src = "axilrobo_closed.png";
-            window.speechSynthesis.speak(msg);
             
-            msg.onend = () => {
+            utterance.onend = () => {
+                // Ανοίγει τα μάτια όταν τελειώσει
                 roboImg.src = "axilrobo_open.png";
+                if (callback) callback();
             };
+
+            synth.speak(utterance);
         }
     </script>
 </body>
