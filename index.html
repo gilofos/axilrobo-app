@@ -151,4 +151,21 @@
                         speak(data.extract);
                         mapBtn.style.display = "block"; // Εμφανίζει κουμπί για όποιον θέλει και Google
                     } else {
-                        // Αν δεν βρει κείμενο, σε
+                        // Αν δεν βρει κείμενο, σε πάει αυτόματα Google
+                        speak("Αχιλλέα, σου στέλνω τις πληροφορίες για " + currentQuery, () => {
+                            setTimeout(() => { openMap(); }, 500);
+                        });
+                    }
+                } catch (e) { 
+                    openMap(); 
+                }
+            };
+            recognition.start();
+        }
+
+        function openMap() {
+            window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(currentQuery);
+        }
+    </script>
+</body>
+</html>
