@@ -27,7 +27,6 @@
             display: block;
         }
 
-        /* Η ΣΤΑΜΠΑ ΠΑΝΩ ΣΤΟ ΡΟΜΠΟΤ */
         .overlay-name {
             position: absolute;
             bottom: 15px;
@@ -70,9 +69,10 @@
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'el-GR';
             
-            // ΡΥΘΜΙΣΗ ΓΙΑ ΒΑΡΙΑ/ΑΝΔΡΙΚΗ ΦΩΝΗ
-            utterance.pitch = 0.5; 
-            utterance.rate = 0.9;  
+            // --- ΤΕΡΜΑ ΜΠΑΣΑ ΦΩΝΗ ---
+            utterance.pitch = 0.3; // Πολύ βαρύς τόνος
+            utterance.rate = 0.8;  // Πιο αργή ομιλία για "όγκο"
+            // -------------------------
 
             roboImg.src = "axilrobo_closed.png";
             utterance.onend = () => { roboImg.src = "axilrobo_open.png"; };
@@ -80,8 +80,8 @@
         }
 
         async function startApp() {
-            speak("Αχιλλέα, σ' ακούω");
-            status.innerText = "ΑΧΙΛΛΕΑ, Σ' ΑΚΟΥΩ...";
+            speak("Σ' ακούω, Αχιλλέα");
+            status.innerText = "Σ' ΑΚΟΥΩ, ΑΧΙΛΛΕΑ...";
 
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
