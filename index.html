@@ -6,86 +6,81 @@
     <title>AXILROBO Mobile</title>
     <style>
         body { background-color: #050505; color: #00d4ff; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-        h1 { font-size: 2.5rem; letter-spacing: 4px; text-shadow: 0 0 15px #00d4ff; margin-bottom: 10px; }
+        h1 { font-size: 2.5rem; letter-spacing: 4px; text-shadow: 0 0 15px #00d4ff; }
         #robo-img { width: 100%; max-width: 350px; border-radius: 25px; box-shadow: 0 0 25px rgba(0, 212, 255, 0.3); margin-bottom: 20px; }
-        #status-box { background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 15px; width: 85%; margin-bottom: 25px; min-height: 40px; border: 1px solid #222; font-size: 1.1rem; }
-        .btn { background: #00d4ff; color: #000; border: none; padding: 20px 50px; font-size: 1.4rem; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4); }
+        #status-box { background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 15px; width: 85%; margin-bottom: 25px; min-height: 40px; border: 1px solid #222; }
+        .btn { background: #00d4ff; color: #000; border: none; padding: 20px 50px; font-size: 1.4rem; font-weight: bold; border-radius: 50px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <h1>AXILROBO</h1>
-
-    <img id="robo-img" src="axilrobo_open.png" alt="AXILROBO">
-
-    <div id="status-box">
-        <span id="display-text">ΠΕΡΙΜΕΝΩ...</span>
-    </div>
-
-    <button id="main-btn" class="btn" onclick="initRobo()">ΕΝΕΡΓΟΠΟΙΗΣΗ</button>
+    <img id="robo-img" src="axilrobo_open.png">
+    <div id="status-box"><span id="display-text">ΠΑΤΑ ΕΚΚΙΝΗΣΗ</span></div>
+    <button id="main-btn" class="btn" onclick="handleInteraction()">ΕΚΚΙΝΗΣΗ</button>
 
     <script>
         const displayText = document.getElementById('display-text');
         const roboImg = document.getElementById('robo-img');
         const mainBtn = document.getElementById('main-btn');
-        let voiceReady = false;
+        let isStarted = false;
 
-        // Αυτό το τρέχουμε ΜΙΑ φορά για να πάρει άδεια ο ήχος
-        function initRobo() {
-            if (!voiceReady) {
-                const welcome = new SpeechSynthesisUtterance('Σύστημα έτοιμο');
-                welcome.lang = 'el-GR';
-                welcome.volume = 1;
-                window.speechSynthesis.speak(welcome);
-                voiceReady = true;
-                mainBtn.innerText = "ACTIVATE";
-                displayText.innerText = "Ο ΗΧΟΣ ΕΙΝΑΙ ΟΚ! ΠΑΤΑ ΞΑΝΑ";
-                return;
+        function handleInteraction() {
+            if (!isStarted) {
+                // Ξεκλειδώνει τον ήχο με την πρώτη κίνηση
+                const speech = new SpeechSynthesisUtterance('Σύστημα Ενεργό');
+                speech.lang = 'el-GR';
+                window.speechSynthesis.speak(speech);
+                isStarted = true;
+                mainBtn.innerText = "ΜΙΛΑ ΤΩΡΑ";
+                displayText.innerText = "ΠΕΡΙΜΕΝΩ ΕΝΤΟΛΗ...";
+            } else {
+                startListening();
             }
-            startListening();
         }
 
         function startListening() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                alert("Χρησιμοποίησε Chrome στο κινητό!");
-                return;
-            }
-
             const recognition = new SpeechRecognition();
             recognition.lang = 'el-GR';
 
             recognition.onstart = () => {
-                displayText.innerText = "ΣΕ ΑΚΟΥΩ, ΑΧΙΛΛΕΑ...";
+                displayText.innerText = "ΣΕ ΑΚΟΥΩ...";
                 displayText.style.color = "#ffff00";
             };
 
-            recognition.onresult = (event) => {
+            recognition.onresult = async (event) => {
                 const text = event.results[0][0].transcript;
                 displayText.innerText = "ΕΙΠΕΣ: " + text;
-                displayText.style.color = "#ffffff";
                 
-                speakAndSearch(text);
+                // ΠΕΡΙΜΕΝΕΙ ΝΑ ΤΕΛΕΙΩΣΕΙ Η ΟΜΙΛΙΑ
+                await speakPromise("Αχιλλέα, ψάχνω για " + text);
+                
+                // ΜΟΝΟ ΑΦΟΥ ΤΕΛΕΙΩΣΕΙ Η ΟΜΙΛΙΑ ΑΝΟΙΓΕΙ ΤΟ LINK
+                window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(text);
             };
 
             recognition.start();
         }
 
-        function speakAndSearch(query) {
-            const msg = new SpeechSynthesisUtterance("Αχιλλέα, ψάχνω για " + query);
-            msg.lang = 'el-GR';
-            
-            roboImg.src = "axilrobo_closed.png";
+        function speakPromise(text) {
+            return new Promise((resolve) => {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'el-GR';
+                utterance.rate = 0.9;
+                
+                roboImg.src = "axilrobo_closed.png";
 
-            msg.onend = () => {
-                roboImg.src = "axilrobo_open.png";
-                // Μόνο όταν τελειώσει η φωνή ανοίγει η Google
-                setTimeout(() => {
-                    window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
-                }, 300);
-            };
+                utterance.onend = () => {
+                    roboImg.src = "axilrobo_open.png";
+                    resolve();
+                };
 
-            window.speechSynthesis.speak(msg);
+                // Αν κολλήσει η φωνή, προχώρα μετά από 3 δευτερόλεπτα ούτως ή άλλως
+                setTimeout(resolve, 3000);
+
+                window.speechSynthesis.speak(utterance);
+            });
         }
     </script>
 </body>
