@@ -6,16 +6,16 @@
     <title>AXILROBO AI</title>
     <style>
         body { background: #050505; color: #00d4ff; font-family: sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        #robo-img { width: 80%; max-width: 300px; border-radius: 20px; box-shadow: 0 0 20px #00d4ff; margin-bottom: 20px; }
-        .btn { background: #00d4ff; color: #000; border: none; padding: 25px 50px; font-size: 1.5rem; font-weight: bold; border-radius: 50px; cursor: pointer; text-transform: uppercase; }
-        #status { margin-top: 20px; font-size: 1.1rem; padding: 0 20px; min-height: 50px; color: #fff; }
+        #robo-img { width: 80%; max-width: 300px; border-radius: 25px; box-shadow: 0 0 20px #00d4ff; margin-bottom: 20px; transition: 0.3s; }
+        .btn { background: #00d4ff; color: #000; border: none; padding: 25px 50px; font-size: 1.5rem; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 15px #00d4ff66; }
+        #status { margin-top: 20px; font-size: 1.1rem; padding: 0 20px; min-height: 60px; color: #fff; line-height: 1.5; }
     </style>
 </head>
 <body>
 
-    <h1>AXILROBO</h1>
+    <h1>AXILROBO AI</h1>
     <img id="robo-img" src="axilrobo_open.png">
-    <div id="status">ΠΑΤΑ ΕΚΚΙΝΗΣΗ</div>
+    <div id="status">ΕΤΟΙΜΟΣ</div>
     <button class="btn" onclick="startApp()">ACTIVATE</button>
 
     <script>
@@ -32,7 +32,7 @@
             synth.speak(utterance);
         }
 
-        function startApp() {
+        async function startApp() {
             speak("Ακούω, Αχιλλέα");
             
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -43,23 +43,32 @@
 
             recognition.onresult = async (event) => {
                 const query = event.results[0][0].transcript;
-                status.innerText = "ΕΙΠΕΣ: " + query;
-
-                // ΕΔΩ ΕΙΝΑΙ Η ΑΛΛΑΓΗ: Αντί για link, ψάχνει στην Wikipedia για γρήγορη απάντηση
+                status.innerText = "Ψάχνω για: " + query + "...";
+                
+                // Χρησιμοποιούμε ένα δωρεάν API για να πάρουμε κείμενο-απάντηση
                 try {
-                    const response = await fetch(`https://el.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
+                    const response = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`);
                     const data = await response.json();
                     
-                    if (data.extract) {
-                        speak("Αχιλλέα, βρήκα αυτό: " + data.extract);
-                        status.innerText = data.extract;
+                    let answer = "";
+                    
+                    if (data.AbstractText) {
+                        answer = data.AbstractText;
+                    } else if (data.RelatedTopics && data.RelatedTopics.length > 0 && data.RelatedTopics[0].Text) {
+                        answer = data.RelatedTopics[0].Text;
                     } else {
-                        speak("Δεν βρήκα συγκεκριμένη διεύθυνση, αλλά σου ανοίγω τον χάρτη.");
-                        window.open("https://www.google.com/maps/search/" + encodeURIComponent(query), "_blank");
+                        answer = "Αχιλλέα, δεν βρήκα σύντομη απάντηση για να σου διαβάσω, οπότε σου ανοίγω τη σελίδα αναζήτησης.";
+                        setTimeout(() => {
+                            window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
+                        }, 4000);
                     }
+
+                    status.innerText = answer;
+                    speak(answer);
+
                 } catch (error) {
-                    speak("Ψάχνω τώρα στη Google.");
-                    window.open("https://www.google.com/search?q=" + encodeURIComponent(query), "_blank");
+                    speak("Υπήρξε ένα πρόβλημα στη σύνδεση. Ανοίγω τη Google.");
+                    window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
                 }
             };
 
