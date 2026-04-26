@@ -6,16 +6,16 @@
     <title>AXILROBO AI</title>
     <style>
         body { background: #050505; color: #00d4ff; font-family: sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        #robo-img { width: 80%; max-width: 300px; border-radius: 25px; box-shadow: 0 0 20px #00d4ff; margin-bottom: 20px; transition: 0.3s; }
-        .btn { background: #00d4ff; color: #000; border: none; padding: 25px 50px; font-size: 1.5rem; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 15px #00d4ff66; }
-        #status { margin-top: 20px; font-size: 1.1rem; padding: 0 20px; min-height: 60px; color: #fff; line-height: 1.5; }
+        #robo-img { width: 80%; max-width: 300px; border-radius: 25px; box-shadow: 0 0 20px #00d4ff; margin-bottom: 20px; }
+        .btn { background: #00d4ff; color: #000; border: none; padding: 25px 50px; font-size: 1.5rem; font-weight: bold; border-radius: 50px; cursor: pointer; }
+        #status { margin-top: 20px; font-size: 1.1rem; padding: 0 20px; color: #fff; }
     </style>
 </head>
 <body>
 
     <h1>AXILROBO AI</h1>
     <img id="robo-img" src="axilrobo_open.png">
-    <div id="status">ΕΤΟΙΜΟΣ</div>
+    <div id="status">ΠΕΣ ΜΟΥ ΚΑΤΙ</div>
     <button class="btn" onclick="startApp()">ACTIVATE</button>
 
     <script>
@@ -23,55 +23,47 @@
         const roboImg = document.getElementById('robo-img');
         const synth = window.speechSynthesis;
 
-        function speak(text) {
+        function speak(text, callback) {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'el-GR';
             utterance.rate = 1.0;
             roboImg.src = "axilrobo_closed.png";
-            utterance.onend = () => { roboImg.src = "axilrobo_open.png"; };
+            utterance.onend = () => { 
+                roboImg.src = "axilrobo_open.png"; 
+                if(callback) callback();
+            };
             synth.speak(utterance);
         }
 
         async function startApp() {
-            speak("Ακούω, Αχιλλέα");
+            speak("Σε ακούω Αχιλλέα");
             
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
             recognition.lang = 'el-GR';
 
-            recognition.onstart = () => { status.innerText = "ΣΕ ΑΚΟΥΩ..."; };
-
             recognition.onresult = async (event) => {
-                const query = event.results[0][0].transcript;
-                status.innerText = "Ψάχνω για: " + query + "...";
+                const query = event.results[0][0].transcript.toLowerCase();
+                status.innerText = "Ψάχνω: " + query;
+
+                // ΕΔΩ ΤΟΥ ΔΙΝΟΥΜΕ "ΠΡΟΣΩΠΙΚΟΤΗΤΑ" ΓΙΑ ΝΑ ΜΗΝ ΛΕΕΙ "ΔΕΝ ΒΡΗΚΑ"
+                let customResponse = "";
                 
-                // Χρησιμοποιούμε ένα δωρεάν API για να πάρουμε κείμενο-απάντηση
-                try {
-                    const response = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`);
-                    const data = await response.json();
-                    
-                    let answer = "";
-                    
-                    if (data.AbstractText) {
-                        answer = data.AbstractText;
-                    } else if (data.RelatedTopics && data.RelatedTopics.length > 0 && data.RelatedTopics[0].Text) {
-                        answer = data.RelatedTopics[0].Text;
-                    } else {
-                        answer = "Αχιλλέα, δεν βρήκα σύντομη απάντηση για να σου διαβάσω, οπότε σου ανοίγω τη σελίδα αναζήτησης.";
-                        setTimeout(() => {
-                            window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
-                        }, 4000);
-                    }
-
-                    status.innerText = answer;
-                    speak(answer);
-
-                } catch (error) {
-                    speak("Υπήρξε ένα πρόβλημα στη σύνδεση. Ανοίγω τη Google.");
-                    window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
+                if (query.includes("φαρμακείο") || query.includes("οδός") || query.includes("που είναι")) {
+                    customResponse = "Αχιλλέα, αμέσως. Σου ανοίγω τον χάρτη για να δεις ακριβώς τη διεύθυνση και το δρόμο.";
+                } else if (query.includes("καιρός")) {
+                    customResponse = "Αχιλλέα, ανοίγω τον καιρό για να δεις τις προβλέψεις στην περιοχή σου.";
+                } else {
+                    customResponse = "Πολύ ενδιαφέρον Αχιλλέα. Μισό λεπτό να σου φέρω τις πληροφορίες που ζήτησες.";
                 }
-            };
 
+                // Μιλάει ΠΡΩΤΑ και ΜΕΤΑ σε στέλνει στη Google
+                speak(customResponse, () => {
+                    setTimeout(() => {
+                        window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
+                    }, 500);
+                });
+            };
             recognition.start();
         }
     </script>
