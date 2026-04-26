@@ -5,21 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AXILROBO AI</title>
     <style>
-        body { background: #050505; color: #00d4ff; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        #robo-img { width: 180px; border-radius: 20px; box-shadow: 0 0 20px #00d4ff; margin: 20px auto; }
-        #status-text { font-size: 1.2rem; color: #fff; margin: 15px; background: rgba(0,212,255,0.1); padding: 20px; border-radius: 15px; border: 1px solid #00d4ff; width: 85%; min-height: 100px; text-align: left; }
-        .btn { background: #00d4ff; color: #000; border: none; padding: 20px 60px; font-size: 1.4rem; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,212,255,0.4); }
+        body { background: #050505; color: #00d4ff; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        #robo-img { width: 150px; border-radius: 20px; box-shadow: 0 0 15px #00d4ff; margin: 10px auto; }
+        #status { font-size: 1rem; color: #fff; margin-bottom: 10px; min-height: 20px; }
+        .btn { background: #00d4ff; color: #000; border: none; padding: 15px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer; margin-bottom: 10px; }
+        #results-container { width: 100%; flex-grow: 1; border: 2px solid #00d4ff; border-radius: 15px; overflow: hidden; background: white; display: none; }
+        iframe { width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
 
     <img id="robo-img" src="axilrobo_open.png">
-    <div id="status-text">ΠΕΡΙΜΕΝΩ ΕΝΤΟΛΗ...</div>
-    <button class="btn" onclick="startApp()">ACTIVATE</button>
+    <div id="status">ΕΤΟΙΜΟΣ</div>
+    <button id="main-btn" class="btn" onclick="startApp()">ACTIVATE</button>
+
+    <div id="results-container">
+        <iframe id="results-frame" src=""></iframe>
+    </div>
 
     <script>
-        const statusBox = document.getElementById('status-text');
+        const status = document.getElementById('status');
         const roboImg = document.getElementById('robo-img');
+        const frame = document.getElementById('results-frame');
+        const container = document.getElementById('results-container');
         const synth = window.speechSynthesis;
 
         function speak(text) {
@@ -27,10 +35,8 @@
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'el-GR';
             utterance.rate = 1.0;
-            
             roboImg.src = "axilrobo_closed.png";
             utterance.onend = () => { roboImg.src = "axilrobo_open.png"; };
-            
             synth.speak(utterance);
         }
 
@@ -43,24 +49,26 @@
 
             recognition.onresult = async (event) => {
                 const query = event.results[0][0].transcript;
-                statusBox.innerText = "Ψάχνω για: " + query;
+                status.innerText = "Αναζήτηση: " + query;
 
+                // ΤΡΑΒΑΜΕ ΤΗΝ ΑΠΑΝΤΗΣΗ ΓΙΑ ΝΑ ΤΗΝ ΠΕΙ
                 try {
-                    // Τραβάμε την απάντηση απευθείας από την Wikipedia
                     const response = await fetch(`https://el.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
                     const data = await response.json();
                     
+                    // ΕΜΦΑΝΙΖΟΥΜΕ ΤΟ ΠΑΡΑΘΥΡΟ ΧΩΡΙΣ ΝΑ ΦΥΓΕΙ ΤΟ ΡΟΜΠΟΤ
+                    container.style.display = "block";
+                    frame.src = "https://www.bing.com/search?q=" + encodeURIComponent(query);
+
                     if (data.extract) {
-                        statusBox.innerText = data.extract; // Το γράφει στην οθόνη
-                        speak(data.extract); // ΤΟ ΔΙΑΒΑΖΕΙ ΟΛΟ
+                        speak(data.extract); // Ο ΡΟΜΠΟΤ ΔΙΑΒΑΖΕΙ ΤΗΝ ΑΠΑΝΤΗΣΗ
                     } else {
-                        speak("Αχιλλέα, δεν βρήκα συγκεκριμένο κείμενο για " + query + ", δες τα αποτελέσματα στη Google.");
-                        setTimeout(() => {
-                            window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
-                        }, 3000);
+                        speak("Σου φέρνω τα αποτελέσματα Αχιλλέα");
                     }
                 } catch (e) {
-                    speak("Κάτι πήγε στραβά με τη σύνδεση.");
+                    container.style.display = "block";
+                    frame.src = "https://www.bing.com/search?q=" + encodeURIComponent(query);
+                    speak("Σου φέρνω τα αποτελέσματα");
                 }
             };
             recognition.start();
