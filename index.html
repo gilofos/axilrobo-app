@@ -3,53 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AXILROBO</title>
+    <title>AXILROBO AI</title>
     <style>
-        body { background: #000; color: #00d4ff; font-family: sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        body { background: #050505; color: #00d4ff; font-family: sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
         #robo-img { width: 80%; max-width: 300px; border-radius: 20px; box-shadow: 0 0 20px #00d4ff; margin-bottom: 20px; }
-        .btn { background: #00d4ff; color: #000; border: none; padding: 25px 50px; font-size: 1.5rem; font-weight: bold; border-radius: 50px; cursor: pointer; }
-        #status { margin-top: 20px; font-size: 1.2rem; min-height: 30px; }
+        .btn { background: #00d4ff; color: #000; border: none; padding: 25px 50px; font-size: 1.5rem; font-weight: bold; border-radius: 50px; cursor: pointer; text-transform: uppercase; }
+        #status { margin-top: 20px; font-size: 1.1rem; padding: 0 20px; min-height: 50px; color: #fff; }
     </style>
 </head>
 <body>
 
+    <h1>AXILROBO</h1>
     <img id="robo-img" src="axilrobo_open.png">
-    <div id="status">ΠΑΤΑ ΤΟ ΚΟΥΜΠΙ</div>
-    <br>
+    <div id="status">ΠΑΤΑ ΕΚΚΙΝΗΣΗ</div>
     <button class="btn" onclick="startApp()">ACTIVATE</button>
 
     <script>
         const status = document.getElementById('status');
         const roboImg = document.getElementById('robo-img');
+        const synth = window.speechSynthesis;
+
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'el-GR';
+            utterance.rate = 1.0;
+            roboImg.src = "axilrobo_closed.png";
+            utterance.onend = () => { roboImg.src = "axilrobo_open.png"; };
+            synth.speak(utterance);
+        }
 
         function startApp() {
-            // "Ξυπνάμε" τη φωνή αμέσως
-            const wakeup = new SpeechSynthesisUtterance('Ακούω');
-            wakeup.lang = 'el-GR';
-            window.speechSynthesis.speak(wakeup);
-
+            speak("Ακούω, Αχιλλέα");
+            
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
             recognition.lang = 'el-GR';
 
             recognition.onstart = () => { status.innerText = "ΣΕ ΑΚΟΥΩ..."; };
 
-            recognition.onresult = (event) => {
-                const text = event.results[0][0].transcript;
-                status.innerText = "ΕΙΠΕΣ: " + text;
-                
-                // ΦΩΝΗ
-                const reply = new SpeechSynthesisUtterance("Ψάχνω για " + text);
-                reply.lang = 'el-GR';
-                
-                roboImg.src = "axilrobo_closed.png";
-                window.speechSynthesis.speak(reply);
+            recognition.onresult = async (event) => {
+                const query = event.results[0][0].transcript;
+                status.innerText = "ΕΙΠΕΣ: " + query;
 
-                reply.onend = () => {
-                    roboImg.src = "axilrobo_open.png";
-                    // ΑΝΟΙΓΜΑ ΣΕ ΝΕΟ ΠΑΡΑΘΥΡΟ ΓΙΑ ΝΑ ΜΗΝ ΚΟΠΕΙ Η ΦΩΝΗ
-                    window.open("https://www.google.com/search?q=" + encodeURIComponent(text), "_blank");
-                };
+                // ΕΔΩ ΕΙΝΑΙ Η ΑΛΛΑΓΗ: Αντί για link, ψάχνει στην Wikipedia για γρήγορη απάντηση
+                try {
+                    const response = await fetch(`https://el.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    
+                    if (data.extract) {
+                        speak("Αχιλλέα, βρήκα αυτό: " + data.extract);
+                        status.innerText = data.extract;
+                    } else {
+                        speak("Δεν βρήκα συγκεκριμένη διεύθυνση, αλλά σου ανοίγω τον χάρτη.");
+                        window.open("https://www.google.com/maps/search/" + encodeURIComponent(query), "_blank");
+                    }
+                } catch (error) {
+                    speak("Ψάχνω τώρα στη Google.");
+                    window.open("https://www.google.com/search?q=" + encodeURIComponent(query), "_blank");
+                }
             };
 
             recognition.start();
