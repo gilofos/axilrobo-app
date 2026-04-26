@@ -6,7 +6,6 @@
     <title>AXILROBO AI</title>
     
     <link rel="manifest" href="manifest.json">
-    
     <link rel="icon" type="image/png" href="axilrobo_icon.png">
     <link rel="apple-touch-icon" href="axilrobo_icon.png">
     
@@ -16,81 +15,13 @@
     <meta name="theme-color" content="#050505">
 
     <style>
-        body { 
-            background: #050505; 
-            color: #00d4ff; 
-            font-family: sans-serif; 
-            text-align: center; 
-            margin: 0; 
-            padding: 10px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            min-height: 100vh; 
-            overflow: hidden; 
-        }
-        
-        .image-container { 
-            position: relative; 
-            width: 280px; 
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 0 25px #00d4ff;
-            margin-bottom: 10px;
-        }
-        
-        #robo-img { 
-            width: 100%; 
-            display: block; 
-        }
-
-        /* ΤΑ 3D ΓΡΑΜΜΑΤΑ ΠΑΝΩ ΣΤΗΝ ΕΙΚΟΝΑ ΣΤΟ ΚΑΤΩ ΜΕΡΟΣ */
-        .robo-name-3d {
-            position: absolute;
-            bottom: 12px;
-            left: 0;
-            width: 100%;
-            color: #00d4ff;
-            font-size: 2.2rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            pointer-events: none;
-            text-shadow: 
-                0 1px 0 #008fb3, 
-                0 2px 0 #007a99, 
-                0 3px 0 #006680, 
-                0 4px 0 #005266, 
-                0 6px 4px rgba(0,0,0,0.8);
-        }
-
-        #status { 
-            font-size: 1rem; 
-            color: #fff; 
-            margin: 15px 0; 
-            background: rgba(0,212,255,0.1); 
-            padding: 12px; 
-            border-radius: 10px; 
-            width: 85%; 
-            border: 1px solid #00d4ff; 
-            min-height: 45px; 
-        }
-
-        .btn { 
-            background: #00d4ff; 
-            color: #000; 
-            border: none; 
-            padding: 18px 50px; 
-            font-size: 1.4rem; 
-            font-weight: bold; 
-            border-radius: 50px; 
-            cursor: pointer; 
-            box-shadow: 0 5px 15px rgba(0,212,255,0.4);
-            transition: 0.2s;
-        }
-
-        .btn:active { transform: scale(0.95); }
+        body { background: #050505; color: #00d4ff; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+        .image-container { position: relative; width: 280px; border-radius: 20px; overflow: hidden; box-shadow: 0 0 25px #00d4ff; margin-bottom: 10px; }
+        #robo-img { width: 100%; display: block; }
+        .robo-name-3d { position: absolute; bottom: 12px; left: 0; width: 100%; color: #00d4ff; font-size: 2.2rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; pointer-events: none; text-shadow: 0 1px 0 #008fb3, 0 2px 0 #007a99, 0 3px 0 #006680, 0 4px 0 #005266, 0 6px 4px rgba(0,0,0,0.8); }
+        #status { font-size: 1rem; color: #fff; margin: 15px 0; background: rgba(0,212,255,0.1); padding: 12px; border-radius: 10px; width: 85%; border: 1px solid #00d4ff; min-height: 45px; }
+        .btn { background: #00d4ff; color: #000; border: none; padding: 18px 50px; font-size: 1.4rem; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,212,255,0.4); margin-bottom: 10px; }
+        #more-btn { background: #ffcc00; display: none; color: #000; padding: 12px 30px; font-size: 1rem; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -100,52 +31,67 @@
         <div class="robo-name-3d">AXILROBO</div>
     </div>
 
-    <div id="status">ΕΤΟΙΜΟΣ</div>
+    <div id="status">ΕΤΟΙΜΟΣ ΑΧΙΛΛΕΑ</div>
     
     <button class="btn" onclick="startApp()">ACTIVATE</button>
+    <button id="more-btn" onclick="openMore()">ΠΕΡΙΣΣΟΤΕΡΑ</button>
 
     <script>
         const status = document.getElementById('status');
         const roboImg = document.getElementById('robo-img');
+        const moreBtn = document.getElementById('more-btn');
         const synth = window.speechSynthesis;
+        let currentQuery = "";
 
-        function speak(text) {
+        function speak(text, callback) {
             synth.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'el-GR';
-            
-            // Κίνηση στόματος
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'el-GR';
             roboImg.src = "axilrobo_closed.png";
-            utterance.onend = () => { 
+            utter.onend = () => { 
                 roboImg.src = "axilrobo_open.png"; 
+                if (callback) callback(); 
             };
-            synth.speak(utterance);
+            synth.speak(utter);
         }
 
         async function startApp() {
-            speak("Ακούω Αχιλλέα");
-            
+            // Εδώ είναι η παλιά καλή λειτουργία
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                alert("Το κινητό δεν υποστηρίζει αναγνώριση φωνής.");
-                return;
-            }
-
             const recognition = new SpeechRecognition();
             recognition.lang = 'el-GR';
 
-            recognition.onresult = (event) => {
-                const query = event.results[0][0].transcript;
-                status.innerText = "Ψάχνω: " + query;
-                speak("Ψάχνω για " + query);
-                
-                // Άνοιγμα αναζήτησης μετά από 2 δευτερόλεπτα
-                setTimeout(() => {
-                    window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
-                }, 2000);
+            recognition.onstart = () => {
+                speak("Ακούω Αχιλλέα");
+                status.innerText = "Ακούω...";
             };
-            
+
+            recognition.onresult = async (event) => {
+                currentQuery = event.results[0][0].transcript;
+                status.innerText = "Ψάχνω: " + currentQuery;
+
+                try {
+                    const res = await fetch(`https://el.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(currentQuery)}`);
+                    const data = await res.json();
+                    
+                    if (data.extract) {
+                        status.innerText = data.extract;
+                        speak(data.extract);
+                        moreBtn.style.display = "inline-block";
+                    } else {
+                        speak("Δεν βρήκα Wikipedia, δες στο Google", () => {
+                            setTimeout(() => { openMore(); }, 1000);
+                        });
+                    }
+                } catch (e) { 
+                    openMore(); 
+                }
+            };
             recognition.start();
+        }
+
+        function openMore() {
+            window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(currentQuery);
         }
     </script>
 </body>
