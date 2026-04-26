@@ -5,87 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AXILROBO Mobile</title>
     <style>
-        body { 
-            background-color: #050505; 
-            color: #00d4ff; 
-            font-family: 'Segoe UI', sans-serif; 
-            text-align: center; 
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-        h1 { 
-            font-size: 2.5rem; 
-            letter-spacing: 4px;
-            margin-bottom: 15px;
-            text-shadow: 0 0 15px #00d4ff;
-        }
-        #robo-img { 
-            width: 100%; 
-            max-width: 350px; 
-            border-radius: 25px;
-            box-shadow: 0 0 25px rgba(0, 212, 255, 0.3);
-            margin-bottom: 20px;
-            cursor: pointer;
-        }
-        #status-box {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            border-radius: 15px;
-            width: 85%;
-            margin-bottom: 25px;
-            font-size: 1.2rem;
-            min-height: 30px;
-            border: 1px solid #111;
-        }
-        .btn {
-            background: #00d4ff;
-            color: #000;
-            border: none;
-            padding: 20px 50px;
-            font-size: 1.4rem;
-            font-weight: bold;
-            border-radius: 50px;
-            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
-            text-transform: uppercase;
-        }
+        body { background-color: #050505; color: #00d4ff; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        h1 { font-size: 2.5rem; letter-spacing: 4px; text-shadow: 0 0 15px #00d4ff; margin-bottom: 10px; }
+        #robo-img { width: 100%; max-width: 350px; border-radius: 25px; box-shadow: 0 0 25px rgba(0, 212, 255, 0.3); margin-bottom: 20px; }
+        #status-box { background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 15px; width: 85%; margin-bottom: 25px; min-height: 40px; border: 1px solid #222; font-size: 1.1rem; }
+        .btn { background: #00d4ff; color: #000; border: none; padding: 20px 50px; font-size: 1.4rem; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4); }
     </style>
 </head>
 <body>
 
     <h1>AXILROBO</h1>
 
-    <img id="robo-img" src="axilrobo_open.png" alt="AXILROBO" onclick="testVoice()">
+    <img id="robo-img" src="axilrobo_open.png" alt="AXILROBO">
 
     <div id="status-box">
-        <span id="display-text">ΠΑΤΑ ΤΟ ΚΟΥΜΠΙ</span>
+        <span id="display-text">ΠΕΡΙΜΕΝΩ...</span>
     </div>
 
-    <button class="btn" onclick="startListening()">ACTIVATE</button>
+    <button id="main-btn" class="btn" onclick="initRobo()">ΕΝΕΡΓΟΠΟΙΗΣΗ</button>
 
     <script>
         const displayText = document.getElementById('display-text');
         const roboImg = document.getElementById('robo-img');
-        const synth = window.speechSynthesis;
+        const mainBtn = document.getElementById('main-btn');
+        let voiceReady = false;
 
-        // Λειτουργία για να "ξεκλειδώσει" ο ήχος στο κινητό
-        function testVoice() {
-            const ut = new SpeechSynthesisUtterance('Έτοιμος');
-            ut.lang = 'el-GR';
-            ut.volume = 0; // Αθόρυβο τεστ
-            synth.speak(ut);
-            displayText.innerText = "ΗΧΟΣ ΕΝΕΡΓΟΣ";
+        // Αυτό το τρέχουμε ΜΙΑ φορά για να πάρει άδεια ο ήχος
+        function initRobo() {
+            if (!voiceReady) {
+                const welcome = new SpeechSynthesisUtterance('Σύστημα έτοιμο');
+                welcome.lang = 'el-GR';
+                welcome.volume = 1;
+                window.speechSynthesis.speak(welcome);
+                voiceReady = true;
+                mainBtn.innerText = "ACTIVATE";
+                displayText.innerText = "Ο ΗΧΟΣ ΕΙΝΑΙ ΟΚ! ΠΑΤΑ ΞΑΝΑ";
+                return;
+            }
+            startListening();
         }
 
         function startListening() {
-            // Έλεγχος υποστήριξης
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                alert("Χρησιμοποίησε Chrome ή Safari για φωνητικές εντολές.");
+                alert("Χρησιμοποίησε Chrome στο κινητό!");
                 return;
             }
 
@@ -102,45 +65,27 @@
                 displayText.innerText = "ΕΙΠΕΣ: " + text;
                 displayText.style.color = "#ffffff";
                 
-                // ΕΚΤΕΛΕΣΗ: Μιλάει και μετά ανοίγει τη σελίδα
-                handleResponse(text);
-            };
-
-            recognition.onerror = () => {
-                displayText.innerText = "ΔΕΝ ΣΕ ΑΚΟΥΣΑ. ΔΟΚΙΜΑΣΕ ΞΑΝΑ.";
-                displayText.style.color = "#ff4444";
+                speakAndSearch(text);
             };
 
             recognition.start();
         }
 
-        function handleResponse(query) {
-            const reply = new SpeechSynthesisUtterance("Αχιλλέα, ψάχνω για " + query);
-            reply.lang = 'el-GR';
-            reply.rate = 1.0;
-
-            // Κλείνει τα μάτια
+        function speakAndSearch(query) {
+            const msg = new SpeechSynthesisUtterance("Αχιλλέα, ψάχνω για " + query);
+            msg.lang = 'el-GR';
+            
             roboImg.src = "axilrobo_closed.png";
 
-            // ΜΟΛΙΣ ΤΕΛΕΙΩΣΕΙ Η ΟΜΙΛΙΑ -> ΑΝΟΙΓΕΙ Η GOOGLE
-            reply.onend = () => {
+            msg.onend = () => {
                 roboImg.src = "axilrobo_open.png";
+                // Μόνο όταν τελειώσει η φωνή ανοίγει η Google
                 setTimeout(() => {
                     window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
-                }, 400);
+                }, 300);
             };
 
-            // Αν η ομιλία κολλήσει για πάνω από 3 δευτερόλεπτα, προχώρα ούτως ή άλλως
-            const safetyTimeout = setTimeout(() => {
-                window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
-            }, 3500);
-
-            reply.onstart = () => {
-                // Αν ξεκινήσει κανονικά, ακυρώνουμε το safety timeout για να μην γίνει διπλή ανακατεύθυνση
-                // Αλλά συνήθως το onend είναι πιο σίγουρο.
-            };
-
-            synth.speak(reply);
+            window.speechSynthesis.speak(msg);
         }
     </script>
 </body>
