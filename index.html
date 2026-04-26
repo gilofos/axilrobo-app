@@ -5,60 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AXILROBO AI</title>
     <style>
-        body { background: #050505; color: #00d4ff; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        #robo-img { width: 150px; border-radius: 20px; box-shadow: 0 0 15px #00d4ff; margin: 10px auto; }
-        #status { font-size: 1rem; color: #fff; margin-bottom: 10px; min-height: 20px; }
-        .btn { background: #00d4ff; color: #000; border: none; padding: 15px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer; margin-bottom: 10px; }
-        #results-container { width: 100%; flex-grow: 1; border: 2px solid #00d4ff; border-radius: 15px; overflow: hidden; background: white; display: none; }
-        iframe { width: 100%; height: 100%; border: none; }
+        body { background: #000; color: #00d4ff; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        #robo-img { width: 250px; border-radius: 20px; box-shadow: 0 0 20px #00d4ff; margin-bottom: 20px; }
+        #status { font-size: 1.2rem; color: #fff; margin-bottom: 20px; min-height: 50px; padding: 0 10px; }
+        .btn { background: #00d4ff; color: #000; border: none; padding: 20px 50px; font-size: 1.5rem; font-weight: bold; border-radius: 50px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <img id="robo-img" src="axilrobo_open.png">
-    <div id="status">ΕΤΟΙΜΟΣ</div>
-    <button id="main-btn" class="btn" onclick="startApp()">ACTIVATE</button>
-
-    <div id="results-container">
-        <iframe id="results-frame" src=""></iframe>
-    </div>
+    <div id="status">ΠΑΤΑ ΕΚΚΙΝΗΣΗ</div>
+    <button class="btn" onclick="startApp()">ACTIVATE</button>
 
     <script>
         const status = document.getElementById('status');
         const roboImg = document.getElementById('robo-img');
-        const frame = document.getElementById('results-frame');
-        const container = document.getElementById('results-container');
         const synth = window.speechSynthesis;
 
-        function speak(text, callback) {
+        function speak(text) {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'el-GR';
             utterance.rate = 1.0;
             roboImg.src = "axilrobo_closed.png";
-            utterance.onend = () => { 
-                roboImg.src = "axilrobo_open.png"; 
-                if(callback) callback();
-            };
+            utterance.onend = () => { roboImg.src = "axilrobo_open.png"; };
             synth.speak(utterance);
         }
 
-        function startApp() {
+        async function startApp() {
             speak("Σε ακούω Αχιλλέα");
             
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
             recognition.lang = 'el-GR';
 
-            recognition.onresult = (event) => {
+            recognition.onresult = async (event) => {
                 const query = event.results[0][0].transcript;
-                status.innerText = "Αναζήτηση: " + query;
+                status.innerText = "Σκέφτομαι για: " + query;
 
-                speak("Αχιλλέα, σου φέρνω αμέσως τις πληροφορίες για " + query, () => {
-                    // Εμφανίζουμε το πλαίσιο με τα αποτελέσματα ΧΩΡΙΣ να φύγουμε από τη σελίδα
-                    container.style.display = "block";
-                    // Χρησιμοποιούμε το Bing ή το Google (Σημείωση: Το Google μερικές φορές μπλοκάρει τα iframes, το Bing είναι πιο ελαστικό)
-                    frame.src = "https://www.bing.com/search?q=" + encodeURIComponent(query);
-                });
+                // Χρησιμοποιούμε μια ελεύθερη πηγή για να πάρουμε ΚΕΙΜΕΝΟ που μπορεί να διαβαστεί
+                try {
+                    const res = await fetch(`https://el.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
+                    const data = await res.json();
+                    
+                    if (data.extract) {
+                        // ΕΔΩ ΜΙΛΑΕΙ ΚΑΙ ΔΙΑΒΑΖΕΙ ΤΗΝ ΑΠΑΝΤΗΣΗ
+                        status.innerText = data.extract;
+                        speak(data.extract);
+                    } else {
+                        // Αν δεν βρει κείμενο, του δίνουμε μια έτοιμη φωνητική απάντηση
+                        const failMsg = "Αχιλλέα, δεν βρήκα έτοιμη απάντηση για να σου διαβάσω, αλλά σου ανοίγω τη Google.";
+                        speak(failMsg);
+                        setTimeout(() => {
+                            window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
+                        }, 4000);
+                    }
+                } catch (e) {
+                    speak("Υπήρξε ένα σφάλμα, Αχιλλέα.");
+                }
             };
             recognition.start();
         }
